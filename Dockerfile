@@ -144,6 +144,42 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 ADD services.d /etc/services.d
 ADD nginx.conf /etc/nginx/nginx.conf
 
+# ------------------------ Laravel dependencies ------------------------
+
+ADD install_composer.php /var/www/html/install_composer.php
+
+RUN apk add --update --no-cache \
+
+        # needed for composer
+        git zip unzip \
+
+        # needed for psql
+        "postgresql-dev>9.5" \
+        "libpq>9.5" \
+
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+
+    # Installing common Laravel dependencies
+    && docker-php-ext-install mbstring \
+
+        # needed for postgres connectivity
+        pdo \
+        pdo_pgsql \
+        pgsql \
+
+        # needed for forking processes in laravel queues as of Laravel 5.3
+        pcntl \
+
+    # Installing composer
+    && php /var/www/html/install_composer.php \
+
+    # For parallel composer dependency installs
+    && composer global require hirak/prestissimo \
+
+    && mkdir -p /home/www-data/.composer/cache \
+
+    && chown -R www-data:www-data /home/www-data/ /var/www/html
+
 # ------------------------ start fpm/nginx ------------------------
 
 EXPOSE 80

@@ -1,13 +1,23 @@
 language: bash
 services: docker
+install:
+ - git clone https://github.com/docker-library/official-images.git ~/official-images
 before_script:
-  - docker -v
-  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+ - docker -v
+ - image="realpage/fpm-nginx:latest"
+ - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 script:
-  - docker build -t "realpage/fpm-nginx" .
-  - docker images
-  # build and push all variations of images
-  - if [[ $TRAVIS_PULL_REQUEST_BRANCH == '' && $TRAVIS_BRANCH == 'master' ]]; then bash build.sh ; fi
-notifications:
-  slack:
-    secure: ${SLACK_TOKEN}
+ - docker build -t "$image" .
+# Disabling because we don't want cmd to be overwriteable
+# - ~/official-images/test/run.sh "$image"
+ - docker images
+before_deploy:
+ # Extract the version components out of a `v12.34.56` or `12.34.56` version string (only works if this is a semantically versioned tag)
+ - IFS=. read MAJOR MINOR PATCH <<< "${TRAVIS_TAG#v}"
+ - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+deploy:
+ provider: script
+ script: docker push "realpage/fpm-nginx:latest" && docker tag "realpage/fpm-nginx:latest" "realpage/fpm-nginx:${MAJOR}" && docker push "realpage/fpm-nginx:${MAJOR}" && docker tag "realpage/fpm-nginx:latest" "realpage/fpm-nginx:${MAJOR}.${MINOR}" && docker push "realpage/fpm-nginx:${MAJOR}.${MINOR}" && docker tag "realpage/fpm-nginx:latest" "realpage/fpm-nginx:${MAJOR}.${MINOR}.${PATCH}" && docker push "realpage/fpm-nginx:${MAJOR}.${MINOR}.${PATCH}"
+ skip_cleanup: false
+ on:
+   tags: true
