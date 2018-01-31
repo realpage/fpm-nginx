@@ -1,4 +1,4 @@
-FROM php:7.2.0-fpm-alpine
+FROM php:7.2.1-fpm-alpine3.7
 MAINTAINER DevOps devops@realpage.com
 
 ENV S6_OVERLAY_VERSION=v1.19.1.1
