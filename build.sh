@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 repository="realpage/fpm-nginx"
-fpm=( "7.1.5" "7.1" "7" )
+fpm=( "7.2.1" "7.2" "7" )
 tagsfpm=""
 
 echo "Building tags for fpm images"
